@@ -1,0 +1,42 @@
+name: Refresh voli
+
+on:
+  schedule:
+    - cron: "30 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install --quiet fast-flights primp
+
+      - name: Run pipeline
+        run: python pipeline.py index.html
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet index.html; then
+            echo "No changes"
+            exit 0
+          fi
+          git config user.name "flightsMI-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add index.html
+          git commit -m "Refresh voli $(date -u +%F)"
+          git push
