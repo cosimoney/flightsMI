@@ -2,7 +2,7 @@ name: Refresh voli
 
 on:
   schedule:
-    - cron: "30 4 * * *"
+    - cron: "17 4 * * *"
   workflow_dispatch:
 
 permissions:
