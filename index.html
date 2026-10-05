@@ -86,7 +86,7 @@ h1{
 main{max-width:1120px;margin:0 auto;padding:26px 24px 60px}
 .controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 18px}
 .grp{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
-#viewChips,#originChips,#monthChips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#viewChips,#originChips,#monthChips,#areaChips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .controls .lbl{
   font-family:"IBM Plex Mono",ui-monospace,monospace;
   font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
@@ -216,6 +216,15 @@ tr.detail td{
     </span>
     <span class="sep"></span>
     <span class="grp">
+      <span class="lbl">Area</span>
+      <span id="areaChips">
+        <button class="chip" data-area="all" aria-pressed="true">Tutte</button>
+        <button class="chip" data-area="eu" aria-pressed="false">Europa</button>
+        <button class="chip" data-area="extra" aria-pressed="false">Extra-Europa</button>
+      </span>
+    </span>
+    <span class="sep"></span>
+    <span class="grp">
       <span class="lbl">Paese</span>
       <select class="chip" id="countrySel"><option value="all">Tutti</option></select>
     </span>
@@ -307,14 +316,16 @@ function holiday(r){
   return null;
 }
 
-let state = { view:"combos", includeItaly:false, country:"all", city:null, origin:"all", month:"all", budgetOnly:false, sort:"price", dir:1, openKey:null };
+let state = { view:"combos", area:"all", includeItaly:false, country:"all", city:null, origin:"all", month:"all", budgetOnly:false, sort:"price", dir:1, openKey:null };
 function rowKey(r){ return `${r.origin}|${r.dest}|${r.dep}|${r.dep_time}`; }
 function countryOf(r){ return COUNTRY[r.dest] || "Altro"; }
 
+const EXTRA_EU = new Set(["Marocco","Tunisia","Egitto","Israele","Giordania","Arabia Saudita","Emirati Arabi","Libia","Senegal","Capo Verde","Armenia","Georgia","Turchia"]);
 const MESI_SHORT = {"01":"Gen","02":"Feb","03":"Mar","04":"Apr","05":"Mag","06":"Giu","07":"Lug","08":"Ago","09":"Set","10":"Ott","11":"Nov","12":"Dic"};
 
 function match(r, skip){
   return (state.includeItaly || countryOf(r)!=="Italia")
+      && (skip==="area" || state.area==="all" || (state.area==="extra") === EXTRA_EU.has(countryOf(r)))
       && (skip==="country" || state.country==="all" || countryOf(r)===state.country)
       && (skip==="origin"  || state.origin==="all"  || r.origin===state.origin)
       && (skip==="month"   || state.month==="all"   || r.dep.slice(0,7)===state.month)
@@ -325,6 +336,7 @@ function baseFiltered(){ return DATA.filter(r => match(r, null)); }
 
 function rebuildFilters(){
   // Cascading options: each control lists only values reachable under the OTHER active filters.
+  document.querySelectorAll(".chip[data-area]").forEach(c=>c.setAttribute("aria-pressed", c.dataset.area===state.area ? "true":"false"));
   const sel = document.getElementById("countrySel");
   const avail = [...new Set(DATA.filter(r=>match(r,"country")).map(countryOf))].sort((a,b)=>a.localeCompare(b,"it"));
   if(state.country!=="all" && !avail.includes(state.country)) state.country = "all";
@@ -497,6 +509,12 @@ document.getElementById("cityChip").addEventListener("click", ()=>{
 });
 document.getElementById("countrySel").addEventListener("change", e=>{
   state.country = e.target.value;
+  render();
+});
+document.getElementById("areaChips").addEventListener("click", e=>{
+  const btn = e.target.closest(".chip[data-area]");
+  if(!btn) return;
+  state.area = btn.dataset.area;
   render();
 });
 document.getElementById("originChips").addEventListener("click", e=>{
