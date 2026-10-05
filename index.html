@@ -128,6 +128,7 @@ tr:last-child td{border-bottom:none}
   border:1px solid var(--line);color:var(--ink-soft);
 }
 .apt.mxp{border-color:color-mix(in srgb, var(--amber) 55%, transparent);color:var(--warn)}
+.apt.bgy{border-color:color-mix(in srgb, var(--ok) 55%, transparent);color:var(--ok)}
 .price{
   font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
   font-weight:600;font-size:14.5px;
@@ -193,7 +194,7 @@ tr.detail td{
 
 <header class="board">
   <div class="board-inner">
-    <p class="eyebrow">Milano LIN + MXP &middot; solo voli diretti</p>
+    <p class="eyebrow">Milano LIN + MXP + BGY &middot; solo voli diretti</p>
     <h1>Weekend da Milano</h1>
     <ul class="rules">
       <li>andata <b>gio &ge;19:00</b> / <b>ven &lt;8:00</b> / <b>ven &ge;18:30</b></li>
@@ -225,6 +226,7 @@ tr.detail td{
         <button class="chip" data-origin="all" aria-pressed="true">Entrambi</button>
         <button class="chip" data-origin="LIN" aria-pressed="false">Linate</button>
         <button class="chip" data-origin="MXP" aria-pressed="false">Malpensa</button>
+        <button class="chip" data-origin="BGY" aria-pressed="false">Bergamo</button>
       </span>
     </span>
     <span class="sep"></span>
@@ -258,7 +260,7 @@ tr.detail td{
   </div>
   <div class="footnotes">
     <p>La vista &laquo;Per citt&agrave;&raquo; mostra ogni destinazione col suo range di prezzi A/R; cliccando una citt&agrave; si aprono tutte le sue combinazioni di date. Nella tabella, clicca su una riga per il dettaglio: andata completa e tutti i ritorni diretti della domenica, ciascuno col totale A/R di quella combinazione (prezzo verificato su Google Flights per la fascia oraria del volo). Il prezzo in tabella &egrave; la combinazione pi&ugrave; economica.</p>
-    <p>Prezzi Google Flights al 4 ottobre 2026: a persona, A/R, tariffa base (low cost: solo borsa piccola sotto il sedile). Scansione: 45 destinazioni dirette da Linate + 72 da Malpensa, tutti i weekend da met&agrave; ottobre 2026 a fine aprile 2027, 2 date di partenza ciascuno, pi&ugrave; le verifiche di prezzo sulle singole combinazioni. Le destinazioni assenti non avevano voli diretti entro 115&euro; nelle finestre orarie richieste.</p>
+    <p>Prezzi Google Flights al 4 ottobre 2026: a persona, A/R, tariffa base (low cost: solo borsa piccola sotto il sedile). Scansione: 45 destinazioni dirette da Linate + 72 da Malpensa + 85 da Bergamo, tutti i weekend da met&agrave; ottobre 2026 a fine aprile 2027, 2 date di partenza ciascuno, pi&ugrave; le verifiche di prezzo sulle singole combinazioni. Le destinazioni assenti non avevano voli diretti entro 115&euro; nelle finestre orarie richieste.</p>
   </div>
 </main>
 
@@ -287,6 +289,7 @@ const COUNTRY = {
   VNO:"Lituania",RIX:"Lettonia",TLL:"Estonia",SOF:"Bulgaria",
   BEG:"Serbia",TIA:"Albania",TGD:"Montenegro",PRN:"Kosovo",
   RAK:"Marocco",RBA:"Marocco",TUN:"Tunisia",LCA:"Cipro",
+  FAO:"Portogallo",MRS:"Francia",BHX:"Regno Unito",LPL:"Regno Unito",NCL:"Regno Unito",CRL:"Belgio",EIN:"Paesi Bassi",WMI:"Polonia",POZ:"Polonia",WRO:"Polonia",IAS:"Romania",TSR:"Romania",VAR:"Bulgaria",HER:"Grecia",CHQ:"Grecia",CFU:"Grecia",RHO:"Grecia",JTR:"Grecia",ZTH:"Grecia",PFO:"Cipro",ZAG:"Croazia",DBV:"Croazia",ZAD:"Croazia",SJJ:"Bosnia ed Erzegovina",SKP:"Macedonia del Nord",BLL:"Danimarca",BGO:"Norvegia",SVG:"Norvegia",TOS:"Norvegia",TRF:"Norvegia",RVN:"Finlandia",KUN:"Lituania",KIV:"Moldavia",SAW:"Turchia",FEZ:"Marocco",AGA:"Marocco",TNG:"Marocco",CMN:"Marocco",
 };
 
 function d(iso){ const [y,m,dd] = iso.split("-").map(Number); return new Date(y, m-1, dd); }
@@ -415,7 +418,7 @@ function render(){
       : `Nessuna destinazione con questi filtri.`;
     grid.innerHTML = cities.map(c=>{
       const range = c.min===c.max ? `${c.min}€` : `${c.min}–${c.max}€`;
-      const apts = [...c.origins].sort().map(o=>`<span class="apt ${o==="MXP"?"mxp":""}">${o}</span>`).join("");
+      const apts = [...c.origins].sort().map(o=>`<span class="apt ${o.toLowerCase()}">${o}</span>`).join("");
       return `<button class="citycard" data-city="${c.city}">
         <span class="cc-top"><span class="cc-name">${c.city}</span><span class="cc-range${c.min<=100?" inb":""}">${range}</span></span>
         <span class="cc-meta">${apts} ${c.weekends.size} weekend &middot; ${c.n} combinazioni</span>
@@ -445,7 +448,7 @@ function render(){
       <td class="price-cell"><span class="caret">&#9654;</span><span class="price">${r.price}€</span>${badge}</td>
       <td class="mono">${fmtWeekend(r)}${xmas}</td>
       <td><span class="city">${r.city}</span><span class="iata">${r.dest}</span></td>
-      <td><span class="apt ${r.origin==="MXP"?"mxp":""}">${r.origin}</span></td>
+      <td><span class="apt ${r.origin.toLowerCase()}">${r.origin}</span></td>
       <td class="mono"><span class="day">${day}</span> ${r.dep_time}</td>
       <td class="mono">${r.arr_time}</td>
       <td>${r.airline}</td>
