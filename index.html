@@ -1,7 +1,7 @@
 <!doctype html><html lang="it">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Weekend da Milano</title>
+<title>Weekend da Milano e Pisa</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
 :root{
@@ -86,7 +86,10 @@ h1{
 main{max-width:1120px;margin:0 auto;padding:26px 24px 60px}
 .controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 18px}
 .grp{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
-#viewChips,#originChips,#monthChips,#areaChips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#viewChips,#originChips,#monthChips,#areaChips,#baseChips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+input.chip{min-width:190px}
+input.chip::placeholder{color:var(--ink-soft)}
+.ov-sub{color:var(--ink-soft);font-size:12px}
 .controls .lbl{
   font-family:"IBM Plex Mono",ui-monospace,monospace;
   font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);
@@ -194,8 +197,8 @@ tr.detail td{
 
 <header class="board">
   <div class="board-inner">
-    <p class="eyebrow">Milano LIN + MXP + BGY &middot; solo voli diretti</p>
-    <h1>Weekend da Milano</h1>
+    <p class="eyebrow">Milano (LIN &middot; MXP &middot; BGY) + Pisa (PSA) &middot; solo voli diretti</p>
+    <h1>Weekend da Milano &amp; Pisa</h1>
     <ul class="rules">
       <li>andata <b>gio &ge;19:00</b> / <b>ven &lt;8:00</b> / <b>ven &ge;18:30</b></li>
       <li>rientro <b>domenica</b></li>
@@ -208,6 +211,19 @@ tr.detail td{
 <main>
   <div class="controls">
     <span class="grp">
+      <span class="lbl">Base</span>
+      <span id="baseChips">
+        <button class="chip" data-base="milan" aria-pressed="true">Milano</button>
+        <button class="chip" data-base="pisa" aria-pressed="false">Pisa</button>
+        <button class="chip" data-base="both" aria-pressed="false">Milano+Pisa</button>
+      </span>
+    </span>
+    <span class="sep"></span>
+    <span class="grp">
+      <input type="search" class="chip" id="searchBox" placeholder="Cerca citt&agrave; o paese&hellip;" aria-label="Cerca citt&agrave; o paese">
+    </span>
+    <span class="sep"></span>
+    <span class="grp" id="viewGrp">
       <span class="lbl">Vista</span>
       <span id="viewChips">
         <button class="chip" data-view="combos" aria-pressed="true">Combinazioni</button>
@@ -229,7 +245,7 @@ tr.detail td{
       <select class="chip" id="countrySel"><option value="all">Tutti</option></select>
     </span>
     <span class="sep"></span>
-    <span class="grp">
+    <span class="grp" id="daGrp">
       <span class="lbl">Da</span>
       <span id="originChips">
         <button class="chip" data-origin="all" aria-pressed="true">Entrambi</button>
@@ -250,6 +266,15 @@ tr.detail td{
   </div>
   <p class="count" id="count"></p>
   <div class="citygrid" id="citygrid" hidden></div>
+  <div class="tablewrap" id="overlapwrap" hidden>
+    <table>
+      <thead><tr>
+        <th>Totale 2 basi</th><th>Weekend</th><th>Destinazione</th>
+        <th>Da Milano (migliore)</th><th>Da Pisa (migliore)</th>
+      </tr></thead>
+      <tbody id="ovrows"></tbody>
+    </table>
+  </div>
   <div class="tablewrap" id="tablewrap">
     <table>
       <thead>
@@ -269,7 +294,7 @@ tr.detail td{
   </div>
   <div class="footnotes">
     <p>La vista &laquo;Per citt&agrave;&raquo; mostra ogni destinazione col suo range di prezzi A/R; cliccando una citt&agrave; si aprono tutte le sue combinazioni di date. Nella tabella, clicca su una riga per il dettaglio: andata completa e tutti i ritorni diretti della domenica, ciascuno col totale A/R di quella combinazione (prezzo verificato su Google Flights per la fascia oraria del volo). Il prezzo in tabella &egrave; la combinazione pi&ugrave; economica.</p>
-    <p>Prezzi Google Flights al 8 ottobre 2026: a persona, A/R, tariffa base (low cost: solo borsa piccola sotto il sedile). Scansione: 45 destinazioni dirette da Linate + 92 da Malpensa + 115 da Bergamo, tutti i weekend da met&agrave; ottobre 2026 a fine aprile 2027, 2 date di partenza ciascuno, pi&ugrave; le verifiche di prezzo sulle singole combinazioni. Le destinazioni assenti non avevano voli diretti entro 115&euro; nelle finestre orarie richieste.</p>
+    <p>Prezzi Google Flights al 8 ottobre 2026: a persona, A/R, tariffa base (low cost: solo borsa piccola sotto il sedile). Scansione: 45 destinazioni dirette da Linate + 92 da Malpensa + 115 da Bergamo + 77 da Pisa, tutti i weekend da met&agrave; ottobre 2026 a fine aprile 2027, 2 date di partenza ciascuno, pi&ugrave; le verifiche di prezzo sulle singole combinazioni. Le destinazioni assenti non avevano voli diretti entro 115&euro; nelle finestre orarie richieste.</p>
   </div>
 </main>
 
@@ -300,6 +325,7 @@ const COUNTRY = {
   RAK:"Marocco",RBA:"Marocco",TUN:"Tunisia",LCA:"Cipro",
   FAO:"Portogallo",MRS:"Francia",BHX:"Regno Unito",LPL:"Regno Unito",NCL:"Regno Unito",CRL:"Belgio",EIN:"Paesi Bassi",WMI:"Polonia",POZ:"Polonia",WRO:"Polonia",IAS:"Romania",TSR:"Romania",VAR:"Bulgaria",HER:"Grecia",CHQ:"Grecia",CFU:"Grecia",RHO:"Grecia",JTR:"Grecia",ZTH:"Grecia",PFO:"Cipro",ZAG:"Croazia",DBV:"Croazia",ZAD:"Croazia",SJJ:"Bosnia ed Erzegovina",SKP:"Macedonia del Nord",BLL:"Danimarca",BGO:"Norvegia",SVG:"Norvegia",TOS:"Norvegia",TRF:"Norvegia",RVN:"Finlandia",KUN:"Lituania",KIV:"Moldavia",SAW:"Turchia",FEZ:"Marocco",AGA:"Marocco",TNG:"Marocco",CMN:"Marocco",
   CAI:"Egitto",HBE:"Egitto",SSH:"Egitto",RMF:"Egitto",HRG:"Egitto",LXR:"Egitto",SPX:"Egitto",TLV:"Israele",AMM:"Giordania",JED:"Arabia Saudita",RUH:"Arabia Saudita",DXB:"Emirati Arabi",SHJ:"Emirati Arabi",MJI:"Libia",DSS:"Senegal",SID:"Capo Verde",BVC:"Capo Verde",EVN:"Armenia",TBS:"Georgia",KUT:"Georgia",ADB:"Turchia",LDE:"Francia",EMA:"Regno Unito",BRQ:"Cechia",LUZ:"Polonia",CRA:"Romania",OMR:"Romania",TGM:"Romania",SCV:"Romania",BBU:"Romania",KLX:"Grecia",EFL:"Grecia",LXS:"Grecia",PVK:"Grecia",JMK:"Grecia",JSI:"Grecia",KGS:"Grecia",
+  GRO:"Spagna",FUE:"Spagna",SEN:"Regno Unito",GLA:"Regno Unito",PIK:"Regno Unito",LBA:"Regno Unito",FMM:"Germania",ORK:"Irlanda",GOT:"Svezia",
 };
 
 function d(iso){ const [y,m,dd] = iso.split("-").map(Number); return new Date(y, m-1, dd); }
@@ -316,16 +342,22 @@ function holiday(r){
   return null;
 }
 
-let state = { view:"combos", area:"all", includeItaly:false, country:"all", city:null, origin:"all", month:"all", budgetOnly:false, sort:"price", dir:1, openKey:null };
+let state = { view:"combos", base:"milan", q:"", area:"all", includeItaly:false, country:"all", city:null, origin:"all", month:"all", budgetOnly:false, sort:"price", dir:1, openKey:null };
 function rowKey(r){ return `${r.origin}|${r.dest}|${r.dep}|${r.dep_time}`; }
 function countryOf(r){ return COUNTRY[r.dest] || "Altro"; }
 
 const EXTRA_EU = new Set(["Marocco","Tunisia","Egitto","Israele","Giordania","Arabia Saudita","Emirati Arabi","Libia","Senegal","Capo Verde","Armenia","Georgia","Turchia"]);
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const CITY_GROUP = {"Londra Stansted":"Londra","Londra Gatwick":"Londra","Londra Heathrow":"Londra","Londra City":"Londra","Londra Luton":"Londra","Londra Southend":"Londra","Parigi CDG":"Parigi","Parigi Orly":"Parigi","Parigi Beauvais":"Parigi","Bucarest Baneasa":"Bucarest","Varsavia Modlin":"Varsavia","Oslo Torp":"Oslo","Bruxelles Charleroi":"Bruxelles","Istanbul Sabiha":"Istanbul","Glasgow Prestwick":"Glasgow"};
+const gcity = c => CITY_GROUP[c] || c;
+const addDays = (iso,n) => { const x = d(iso); x.setDate(x.getDate()+n); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`; };
 const MESI_SHORT = {"01":"Gen","02":"Feb","03":"Mar","04":"Apr","05":"Mag","06":"Giu","07":"Lug","08":"Ago","09":"Set","10":"Ott","11":"Nov","12":"Dic"};
 
 function match(r, skip){
   return (state.includeItaly || countryOf(r)!=="Italia")
       && (skip==="area" || state.area==="all" || (state.area==="extra") === EXTRA_EU.has(countryOf(r)))
+      && (skip==="base" || state.base==="both" || (state.base==="pisa") === (r.origin==="PSA"))
+      && (skip==="q" || !state.q || norm(r.city).includes(state.q) || norm(countryOf(r)).includes(state.q))
       && (skip==="country" || state.country==="all" || countryOf(r)===state.country)
       && (skip==="origin"  || state.origin==="all"  || r.origin===state.origin)
       && (skip==="month"   || state.month==="all"   || r.dep.slice(0,7)===state.month)
@@ -336,6 +368,9 @@ function baseFiltered(){ return DATA.filter(r => match(r, null)); }
 
 function rebuildFilters(){
   // Cascading options: each control lists only values reachable under the OTHER active filters.
+  document.querySelectorAll(".chip[data-base]").forEach(c=>c.setAttribute("aria-pressed", c.dataset.base===state.base ? "true":"false"));
+  document.getElementById("daGrp").hidden = state.base !== "milan";
+  document.getElementById("viewGrp").hidden = state.base === "both";
   document.querySelectorAll(".chip[data-area]").forEach(c=>c.setAttribute("aria-pressed", c.dataset.area===state.area ? "true":"false"));
   const sel = document.getElementById("countrySel");
   const avail = [...new Set(DATA.filter(r=>match(r,"country")).map(countryOf))].sort((a,b)=>a.localeCompare(b,"it"));
@@ -413,6 +448,38 @@ function detailHTML(r){
   <p class="d-note">Il totale accanto a ogni ritorno &egrave; il prezzo A/R a persona con questa andata e quel ritorno. In verde il pi&ugrave; economico; &laquo;n.d.&raquo; = combinazione non offerta da Google Flights (di solito compagnie diverse non combinabili).</p>`;
 }
 
+function renderOverlap(){
+  const map = new Map();
+  for(const r of baseFiltered()){
+    const k = gcity(r.city) + "|" + r.ret;
+    let e = map.get(k);
+    if(!e){ e = {city:gcity(r.city), ret:r.ret, mi:[], pi:[]}; map.set(k, e); }
+    (r.origin === "PSA" ? e.pi : e.mi).push(r);
+  }
+  const both = [...map.values()].filter(e => e.mi.length && e.pi.length);
+  for(const e of both){
+    e.mi.sort((a,b)=>a.price-b.price);
+    e.pi.sort((a,b)=>a.price-b.price);
+    e.tot = e.mi[0].price + e.pi[0].price;
+  }
+  both.sort((a,b)=> a.tot - b.tot || a.ret.localeCompare(b.ret));
+  document.getElementById("count").innerHTML = both.length
+    ? `<b>${both.length}</b> weekend &laquo;incontro&raquo;: stessa destinazione e stesso weekend raggiungibili sia da Milano che da Pisa nei vostri orari e budget. Totale = miglior prezzo da Milano + miglior prezzo da Pisa, a persona.`
+    : `Nessun weekend in comune con questi filtri.`;
+  const opt = r => `<span class="price">${r.price}&euro;</span> <span class="mono">${r.origin} ${GIORNI[d(r.dep).getDay()]} ${r.dep_time}</span> <span class="ov-sub">${r.airline}</span>`;
+  const more = a => a.length > 1 ? ` <span class="ov-sub">+${a.length-1} alt.</span>` : "";
+  document.getElementById("ovrows").innerHTML = both.map(e=>{
+    const wk = fmtWeekend({dep: addDays(e.ret, -3), ret: e.ret});
+    return `<tr>
+      <td class="price-cell"><span class="price">${e.tot}&euro;</span></td>
+      <td class="mono">${wk}</td>
+      <td><span class="city">${e.city}</span></td>
+      <td>${opt(e.mi[0])}${more(e.mi)}</td>
+      <td>${opt(e.pi[0])}${more(e.pi)}</td>
+    </tr>`;
+  }).join("");
+}
+
 function render(){
   rebuildFilters();
   document.querySelectorAll(".chip[data-view]").forEach(c=>c.setAttribute("aria-pressed", c.dataset.view===state.view ? "true":"false"));
@@ -421,6 +488,14 @@ function render(){
   if(state.city) cityChip.textContent = `${state.city} ✕`;
   const grid = document.getElementById("citygrid");
   const wrap = document.getElementById("tablewrap");
+  const ovw = document.getElementById("overlapwrap");
+
+  if(state.base === "both"){
+    grid.hidden = true; wrap.hidden = true; ovw.hidden = false;
+    renderOverlap();
+    return;
+  }
+  ovw.hidden = true;
 
   if(state.view === "cities"){
     grid.hidden = false; wrap.hidden = true;
@@ -509,6 +584,18 @@ document.getElementById("cityChip").addEventListener("click", ()=>{
 });
 document.getElementById("countrySel").addEventListener("change", e=>{
   state.country = e.target.value;
+  render();
+});
+document.getElementById("baseChips").addEventListener("click", e=>{
+  const btn = e.target.closest(".chip[data-base]");
+  if(!btn) return;
+  state.base = btn.dataset.base;
+  if(state.base !== "milan") state.origin = "all";
+  state.openKey = null;
+  render();
+});
+document.getElementById("searchBox").addEventListener("input", e=>{
+  state.q = norm(e.target.value.trim());
   render();
 });
 document.getElementById("areaChips").addEventListener("click", e=>{
