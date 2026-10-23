@@ -68,13 +68,13 @@ def main():
     page = sys.argv[1]
     today = date.today()
     thursdays = []
-    d = date(2026, 10, 15)
-    while d <= date(2027, 4, 29):
+    d = date(2027, 1, 7)
+    while d <= date(2027, 6, 24):
         if d > today:
             thursdays.append(d)
         d += timedelta(days=7)
     if not thursdays:
-        print("ABORT: no future weekends left in the Oct 2026 - Apr 2027 window; disable this workflow.")
+        print("ABORT: no future weekends left in the Jan - Jun 2027 window; disable this workflow.")
         sys.exit(1)
 
     scan_tasks = []
